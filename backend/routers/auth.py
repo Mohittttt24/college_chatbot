@@ -60,24 +60,10 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 @router.post("/login", response_model=Token)
-def login_for_access_token(user_in: UserLogin, db: Session = Depends(get_db)):
-    """
-    Authenticates a user and returns a JWT access token.
-    
-    Inputs:
-        user_in (UserLogin): Email and password.
-        db (Session): Database session.
-        
-    Outputs:
-        Token: The JWT access token string and token type.
-        
-    Flow:
-        1. Query user by email.
-        2. Verify password hashes using AuthService.
-        3. Generate and return access token.
-    """
-    user = db.query(User).filter(User.email == user_in.email).first()
-    if not user or not AuthService.verify_password(user_in.password, user.hashed_password):
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+ 
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not AuthService.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
@@ -96,8 +82,8 @@ def login_for_access_token(user_in: UserLogin, db: Session = Depends(get_db)):
         data={"sub": user.email, "is_admin": user.is_admin},
         expires_delta=access_token_expires
     )
-    
     return Token(access_token=access_token, token_type="bearer")
+    
 
 @router.get("/me", response_model=UserResponse)
 def read_current_user_profile(current_user: User = Depends(get_current_user)):

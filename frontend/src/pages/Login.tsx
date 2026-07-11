@@ -28,22 +28,23 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      // Backend expects username/password as Form URL encoded parameters for OAuth2 OAuthPasswordRequestForm
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
-
-      const response = await axiosInstance.post("/auth/login", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+      // Backend expects JSON body with email and password (UserLogin schema)
+      const response = await axiosInstance.post("/auth/login", {
+        email,
+        password,
       });
 
-      const { access_token, user } = response.data;
-      
-      // Update global context state
-      login(access_token, user);
-      
+      const { access_token } = response.data;
+
+      // Set token on axios so the /auth/me request is authenticated
+      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+
+      // Backend login only returns a token — fetch user profile separately
+      const meResponse = await axiosInstance.get("/auth/me");
+
+      // Update global context state with token + full user object
+      login(access_token, meResponse.data);
+
       // Redirect to dashboard home
       navigate("/dashboard");
     } catch (err: any) {

@@ -54,9 +54,7 @@ export const Chatbot: React.FC = () => {
       setHistoryLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get(`/chat/history`, {
-          params: { session_id: sessionId },
-        });
+        const response = await axiosInstance.get(`/chat/history/${sessionId}`);
 
         // Convert backend ChatHistory logs schema to UI Message structure
         const formattedLogs: Message[] = [];

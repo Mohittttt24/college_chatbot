@@ -16,16 +16,36 @@ class QdrantService:
     Service layer interacting directly with the Qdrant Client to manage vector stores.
     """
 
+    _client = None
+
     def __init__(self):
         """
         Initialize the QdrantClient connection using configurations.
         """
-        # Connects to remote Qdrant Cloud instance using secure URL and API Key
-        self.client = QdrantClient(
-            url=settings.QDRANT_URL,
-            api_key=settings.QDRANT_API_KEY
-        )
         self.collection_name = settings.QDRANT_COLLECTION_NAME
+
+    @property
+    def client(self) -> QdrantClient:
+        if QdrantService._client is None:
+            qdrant_url = settings.QDRANT_URL
+            
+            # Check if URL is placeholder
+            if not qdrant_url or "your-qdrant-cluster-url" in qdrant_url:
+                QdrantService._client = QdrantClient(path="./qdrant_local_db")
+            else:
+                try:
+                    # Try connecting to the specified remote/local server
+                    QdrantService._client = QdrantClient(
+                        url=qdrant_url,
+                        api_key=settings.QDRANT_API_KEY,
+                        timeout=2.0
+                    )
+                    # Quick check to see if server is responsive
+                    QdrantService._client.get_collections()
+                except Exception:
+                    # Fallback to local persistent disk storage
+                    QdrantService._client = QdrantClient(path="./qdrant_local_db")
+        return QdrantService._client
 
     def collection_exists(self, name: str) -> bool:
         """
@@ -156,14 +176,14 @@ class QdrantService:
         """
         self.ensure_collection(name)
         
-        search_results = self.client.search(
+        search_results = self.client.query_points(
             collection_name=name,
-            query_vector=query_vector,
+            query=query_vector,
             limit=top_k
         )
         
         results = []
-        for result in search_results:
+        for result in search_results.points:
             results.append({
                 "text": result.payload.get("text", ""),
                 "score": result.score,

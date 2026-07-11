@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # ----------------------------------------------------
     # Security & JWT Configuration
     # ----------------------------------------------------
-    SECRET_KEY: str = Field("super-secret-key-change-in-production", description="Secret key for signing JWT tokens")
+    SECRET_KEY: str = Field("my_secret_key", description="Secret key for signing JWT tokens")
     ALGORITHM: str = Field("HS256", description="Encryption algorithm used for JWT")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(60, description="Lifetime of an access token in minutes")
 

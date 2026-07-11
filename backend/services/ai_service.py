@@ -5,7 +5,9 @@
 # Storing history directly in PostgreSQL ensures user memory persists between server restarts.
 
 from sqlalchemy.orm import Session
+# pyrefly: ignore [missing-import]
 from langchain_groq import ChatGroq
+# pyrefly: ignore [missing-import]
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing import Optional, List, Dict, Any
 
@@ -27,7 +29,7 @@ class AiService:
         # which is fast, accurate, and suitable for RAG context extraction.
         self.llm = ChatGroq(
             groq_api_key=settings.GROQ_API_KEY,
-            model_name="llama3-8b-8192",
+            model_name="llama-3.1-8b-instant",
             temperature=0.2  # Lower temperature makes the model more deterministic and less likely to hallucinate
         )
 
