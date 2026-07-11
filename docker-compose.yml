@@ -1,0 +1,51 @@
+# Why this file is written:
+# This Docker Compose configuration coordinates both the FastAPI backend and React frontend services.
+# It handles starting, building, port mappings, environment variable injections, and volume bindings
+# to ensure the entire application can be run locally or deployed to AWS EC2 in a single command.
+
+version: '3.8'
+
+services:
+  # Python FastAPI Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    # Environment variables mapped from host system .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      - QDRANT_URL=${QDRANT_URL}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME:-college_faq_collection}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - USE_S3_STORAGE=${USE_S3_STORAGE:-false}
+      - LOCAL_UPLOAD_DIR=static/uploads
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+    # Volumes map local file uploads in case S3 is turned off (LOCAL_STORAGE fallback mode)
+    volumes:
+      - backend-static-uploads:/app/static/uploads
+    restart: always
+
+  # React Frontend Service (Served via Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  backend-static-uploads:

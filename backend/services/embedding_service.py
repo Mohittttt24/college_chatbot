@@ -1,0 +1,58 @@
+# Why this file is written:
+# This service is responsible for generating vector embeddings for text snippets.
+# It uses the FastEmbed library with the 'BAAI/bge-small-en-v1.5' model (384 dimensions).
+# Converting raw text into vectors allows us to store them in Qdrant and perform semantic
+# searches to find the best matching answers to student questions.
+
+from typing import List
+from fastembed import TextEmbedding
+
+class EmbeddingService:
+    """
+    Service encapsulating the FastEmbed model to generate 384-dimensional text embeddings.
+    """
+
+    def __init__(self):
+        """
+        Initialize the FastEmbed model. 
+        Downloads the 'BAAI/bge-small-en-v1.5' model weights if not already present.
+        """
+        # The BAAI/bge-small-en-v1.5 model generates compact, 384-dimensional vector embeddings
+        # which are highly optimized for fast, accurate retrieval tasks.
+        self.model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
+    def embed_texts(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generates numerical vector embeddings for a list of string texts.
+        
+        Inputs:
+            texts (List[str]): List of paragraph chunks or sentences to convert.
+            
+        Outputs:
+            List[List[float]]: A list of 384-dimensional floating point vectors.
+            
+        Flow:
+            1. Passes the list of texts to FastEmbed model.embed().
+            2. The model returns a generator yielding numpy arrays.
+            3. Converts the generated vectors into standard Python lists and returns them.
+        """
+        if not texts:
+            return []
+            
+        # self.model.embed() returns a generator yielding embedding vectors.
+        # We convert each numpy array vector to a standard Python list[float]
+        embeddings_generator = self.model.embed(texts)
+        return [list(vector) for vector in embeddings_generator]
+
+    def embed_query(self, query: str) -> List[float]:
+        """
+        Generates a single vector embedding for a search query.
+        
+        Inputs:
+            query (str): The search input string (e.g. "What is the fee?").
+            
+        Outputs:
+            List[float]: A single 384-dimensional vector.
+        """
+        embeddings = self.embed_texts([query])
+        return embeddings[0] if embeddings else []
