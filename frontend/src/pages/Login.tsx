@@ -28,10 +28,15 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      // Backend expects JSON body with email and password (UserLogin schema)
-      const response = await axiosInstance.post("/auth/login", {
-        email,
-        password,
+      // Backend expects OAuth2 password request form data (username and password)
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const response = await axiosInstance.post("/auth/login", formData, {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       });
 
       const { access_token } = response.data;
