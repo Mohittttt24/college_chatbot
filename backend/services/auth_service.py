@@ -5,15 +5,11 @@
 
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from typing import Union, Any
 
 # Import configurations (which will be created in backend/config.py)
 from config import settings
-
-# Configure password hashing context
-# Deprecated="auto" ensures security updates can be backward compatible
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class AuthService:
     """
@@ -28,12 +24,15 @@ class AuthService:
         
         Inputs:
             plain_password (str): Raw input from user login.
-            hashed_password (str): Hashed password string from PostgreSQL.
+            hashed_password (str): Hashed password string from database.
             
         Outputs:
             bool: True if password matches, False otherwise.
         """
-        return pwd_context.verify(plain_password, hashed_password)
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8") if isinstance(hashed_password, str) else hashed_password
+        )
 
     @staticmethod
     def get_password_hash(password: str) -> str:
@@ -46,7 +45,8 @@ class AuthService:
         Outputs:
             str: Hashed secure string to save in database.
         """
-        return pwd_context.hash(password)
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
     @staticmethod
     def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None) -> str:

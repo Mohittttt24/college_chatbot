@@ -8,8 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-# Import routers
+# Import routers and database to trigger table creation
+from database import Base, engine
 from routers import auth, chatbot, rag, documents, admin
+
+Base.metadata.create_all(bind=engine)
 
 # Initialize the FastAPI application
 app = FastAPI(

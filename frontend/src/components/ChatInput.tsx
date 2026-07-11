@@ -6,7 +6,7 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from "react";
 
 interface ChatInputProps {
-  onSendMessage: (message: str) => void;
+  onSendMessage: (message: string) => void;
   isLoading: boolean;
 }
 
@@ -14,7 +14,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }
   const [text, setText] = useState("");
 
   const handleSend = () => {
-    if (text.strip && text.trim() && !isLoading) {
+    if (text.trim() && !isLoading) {
       onSendMessage(text.trim());
       setText("");
     }

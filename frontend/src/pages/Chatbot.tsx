@@ -6,7 +6,6 @@
 // and presents a beautiful chat log UI.
 
 import React, { useState, useEffect, useRef } from "react";
-import { useAuth } from "../hooks/useAuth";
 import axiosInstance from "../services/api";
 import ChatMessage, { Source } from "../components/ChatMessage";
 import ChatInput from "../components/ChatInput";
@@ -19,7 +18,6 @@ interface Message {
 }
 
 export const Chatbot: React.FC = () => {
-  const { user } = useAuth();
 
   const [mode, setMode] = useState<"general" | "rag">("general");
   const [messages, setMessages] = useState<Message[]>([]);

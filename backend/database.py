@@ -21,8 +21,8 @@ if db_url.startswith("postgres://"):
 connect_args = {}
 
 # Neon Cloud requires SSL connections in production.
-# We append 'sslmode=require' if we detect we are connecting to a cloud (non-localhost) address.
-if "localhost" not in db_url and "127.0.0.1" not in db_url:
+# We append 'sslmode=require' if we detect we are connecting to a cloud (non-localhost) address using PostgreSQL.
+if db_url.startswith("postgresql") and "localhost" not in db_url and "127.0.0.1" not in db_url:
     connect_args = {"sslmode": "require"}
 
 # Initialize the SQLAlchemy engine
