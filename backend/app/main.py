@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 # Import routers
-from backend.routers import auth, chatbot, rag, documents, admin
+from routers import auth, chatbot, rag, documents, admin
 
 # Initialize the FastAPI application
 app = FastAPI(
