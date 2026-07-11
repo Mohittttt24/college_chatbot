@@ -17,7 +17,7 @@ class FAQ(Base):
     """
     __tablename__ = "faqs"
 
-    id = Column(Integer, primarykey=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     question = Column(String(500), unique=True, index=True, nullable=False)  # The FAQ question (e.g., "What are the college timings?")
     answer = Column(Text, nullable=False)                                     # The answer to the FAQ question
     category = Column(String(100), index=True, nullable=True)                # Category classification (e.g., "hostel", "fees", "rules", "general")
