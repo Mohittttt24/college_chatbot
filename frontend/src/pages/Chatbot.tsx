@@ -10,6 +10,7 @@ import axiosInstance from "../services/api";
 import ChatMessage, { Source } from "../components/ChatMessage";
 import ChatInput from "../components/ChatInput";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useAuth } from "../hooks/useAuth";
 
 interface Message {
   sender: "user" | "ai";
