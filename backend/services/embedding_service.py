@@ -4,6 +4,14 @@
 # Converting raw text into vectors allows us to store them in Qdrant and perform semantic
 # searches to find the best matching answers to student questions.
 
+import os
+# Limit multi-threading for ONNX Runtime and numeric libraries to minimize memory usage on resource-constrained hosting (e.g. Render 512MB RAM free tier).
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+
 from typing import List
 from fastembed import TextEmbedding
 
@@ -19,7 +27,8 @@ class EmbeddingService:
         """
         # The BAAI/bge-small-en-v1.5 model generates compact, 384-dimensional vector embeddings
         # which are highly optimized for fast, accurate retrieval tasks.
-        self.model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        # We explicitly set threads=1 to limit intra-op parallelism and minimize memory footprint.
+        self.model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5", threads=1)
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         """

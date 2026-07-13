@@ -1,7 +1,12 @@
-# Why this file is written:
-# This is the main entry point of the FastAPI backend application.
-# It initializes the FastAPI app instance, configures cross-origin resource sharing (CORS),
-# defines base configurations (like title and docs url), and sets up the initial root endpoint.
+import os
+# Limit multi-threading for ONNX Runtime and numeric libraries.
+# This must be done at the very top before importing other packages,
+# to prevent exceeding the memory limit (512MB RAM) on Render/containers.
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
