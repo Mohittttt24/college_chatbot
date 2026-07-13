@@ -4,6 +4,7 @@
 # using Pydantic Settings V2, ensuring all API keys (Groq, Qdrant) and configs
 # are loaded securely with fallback defaults.
 
+# pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from typing import Optional
@@ -38,7 +39,7 @@ class Settings(BaseSettings):
     # AI / LLM Configuration (Groq Cloud API)
     # ----------------------------------------------------
     GROQ_API_KEY: str = Field("gsk_mock_api_key_replace_me", description="API Key to access Groq LLM inference service")
-    RAG_TOP_K: int = Field(3, description="Number of source document chunks to inject as context")
+    RAG_TOP_K: int = Field(8, description="Number of source document chunks to inject as context")
 
     # ----------------------------------------------------
     # Storage Configuration (AWS S3 vs Local Disk)

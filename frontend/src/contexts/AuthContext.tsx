@@ -10,6 +10,7 @@ export interface User {
   id: number;
   email: string;
   is_admin: boolean;
+  full_name?: string | null;
 }
 
 interface AuthContextType {

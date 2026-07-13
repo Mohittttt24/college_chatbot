@@ -18,6 +18,7 @@ import Chatbot from "./pages/Chatbot";
 import FAQ from "./pages/FAQ";
 import Admin from "./pages/Admin";
 import DocumentUpload from "./pages/DocumentUpload";
+import UserManagement from "./pages/UserManagement";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -85,6 +86,14 @@ export const App: React.FC = () => {
               element={
                 <ProtectedRoute adminOnly>
                   <Admin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/users" 
+              element={
+                <ProtectedRoute adminOnly>
+                  <UserManagement />
                 </ProtectedRoute>
               } 
             />

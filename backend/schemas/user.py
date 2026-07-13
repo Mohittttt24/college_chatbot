@@ -3,7 +3,7 @@
 # Pydantic schemas validate request payloads (inputs) and serialize database objects (outputs)
 # into clean, standardized JSON structures. This guarantees security and correctness in API calls.
 
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from typing import Optional
 from datetime import datetime
 
@@ -18,6 +18,14 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: Optional[str] = None
     is_admin: Optional[bool] = False
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            if any(char.isdigit() for char in v):
+                raise ValueError("Name cannot contain numeric values.")
+        return v
 
 # ----------------------------------------------------
 # Request Schemas (API Inputs)

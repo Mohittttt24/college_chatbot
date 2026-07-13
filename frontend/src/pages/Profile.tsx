@@ -24,10 +24,11 @@ export const Profile: React.FC = () => {
         {/* User Card Header */}
         <div className="flex items-center gap-4 border-b border-slate-800/80 pb-5">
           <div className="h-16 w-16 rounded-2xl bg-indigo-600/10 border border-indigo-600/20 text-indigo-400 flex items-center justify-center font-black text-2xl shadow-inner">
-            {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+            {user?.full_name ? user.full_name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : "U")}
           </div>
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-base font-bold text-slate-200">{user?.email}</h3>
+            <h3 className="text-base font-bold text-slate-200">{user?.full_name || user?.email}</h3>
+            {user?.full_name && <span className="text-xs text-slate-500">{user.email}</span>}
             <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md w-fit uppercase tracking-widest mt-1">
               {user?.is_admin ? "Administrator Account" : "Student Account"}
             </span>
@@ -37,6 +38,14 @@ export const Profile: React.FC = () => {
         {/* Detailed Metadata fields */}
         <div className="flex flex-col gap-4">
           
+          {/* Full Name Field */}
+          {user?.full_name && (
+            <div className="grid grid-cols-3 items-center py-2 border-b border-slate-850">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</span>
+              <span className="text-sm font-semibold text-slate-300 col-span-2">{user.full_name}</span>
+            </div>
+          )}
+
           {/* User ID Field */}
           <div className="grid grid-cols-3 items-center py-2 border-b border-slate-850">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">User Reference ID</span>

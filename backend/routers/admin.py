@@ -10,6 +10,8 @@ from typing import List
 # Import schemas, models, and dependencies
 from schemas.faq import FAQCreate, FAQUpdate, FAQResponse
 from models.faq import FAQ
+from models.user import User
+from schemas.user import UserResponse
 from dependencies import get_db, get_current_admin_user
 
 router = APIRouter(
@@ -122,3 +124,40 @@ def delete_faq(
     db.delete(db_faq)
     db.commit()
     return {"message": "FAQ entry successfully deleted."}
+
+@router.get("/users", response_model=List[UserResponse])
+def list_users(
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+):
+    """
+    Lists all registered users. Admin only.
+    """
+    users = db.query(User).order_by(User.id.asc()).all()
+    return users
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_200_OK)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_admin = Depends(get_current_admin_user)
+):
+    """
+    Deletes a user by ID. Admin only. Prevents self-deletion.
+    """
+    if current_admin.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot delete your own admin account."
+        )
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
+    db.delete(db_user)
+    db.commit()
+    return {"message": "User successfully deleted."}

@@ -11,6 +11,7 @@ export const Register: React.FC = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,11 @@ export const Register: React.FC = () => {
       return;
     }
 
+    if (fullName && /\d/.test(fullName)) {
+      setError("Name cannot contain numeric values.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -37,6 +43,7 @@ export const Register: React.FC = () => {
       await axiosInstance.post("/auth/register", {
         email,
         password,
+        full_name: fullName.trim() || null,
       });
 
       setSuccess(true);
@@ -71,6 +78,21 @@ export const Register: React.FC = () => {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Full Name Field */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="e.g. John Doe"
+              disabled={loading}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 outline-none transition-colors duration-150"
+            />
+          </div>
+
           {/* Email Field */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">

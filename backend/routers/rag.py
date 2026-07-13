@@ -13,6 +13,7 @@ from services.rag_service import RagService
 from services.qdrant_service import QdrantService
 from services.embedding_service import EmbeddingService
 from services.document_service import DocumentService
+from services.web_scraper_service import WebScraperService
 from dependencies import get_db, get_current_admin_user
 from models.document import Document
 from config import settings
@@ -145,4 +146,80 @@ def ask_question(payload: RagAskRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"RAG QA pipeline failed: {str(e)}"
+        )
+
+@router.post("/embed-website", response_model=EmbedStatusResponse, status_code=status.HTTP_200_OK)
+def embed_website(current_user = Depends(get_current_admin_user)):
+    """
+    Crawls the AIET website (https://new.aiet.org.in/) and embeds all page
+    content into Qdrant so the AIET Chatbox can answer from live website data.
+    
+    Inputs:
+        current_user: Admin authentication check dependency.
+        
+    Outputs:
+        EmbedStatusResponse: Status message and total number of chunks embedded.
+        
+    Flow:
+        1. Crawl all internal pages of https://new.aiet.org.in/
+        2. Extract clean text from each page.
+        3. Chunk text into overlapping segments.
+        4. Embed chunks using EmbeddingService.
+        5. Upsert all vectors into Qdrant under the college collection.
+    """
+    AIET_WEBSITE_URL = "https://new.aiet.org.in/"
+    CHUNK_SIZE = 800
+    CHUNK_OVERLAP = 100
+
+    try:
+        # Step 1: Crawl the website
+        scraper = WebScraperService(base_url=AIET_WEBSITE_URL, max_pages=80, delay=0.3)
+        pages = scraper.crawl()
+
+        if not pages:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No pages were successfully crawled from the AIET website."
+            )
+
+        total_chunks = 0
+
+        for page in pages:
+            text = page["text"]
+            url = page["url"]
+            title = page["title"]
+
+            if not text.strip():
+                continue
+
+            # Step 2: Chunk the page text
+            chunks = []
+            start = 0
+            while start < len(text):
+                end = start + CHUNK_SIZE
+                chunks.append(text[start:end])
+                start += CHUNK_SIZE - CHUNK_OVERLAP
+
+            # Step 3: Embed and upsert into Qdrant
+            embeddings = embedding_service.embed_texts(chunks)
+            count = qdrant_service.upsert_chunks(
+                name=settings.QDRANT_COLLECTION_NAME,
+                texts=chunks,
+                embeddings=embeddings,
+                document_id=0,          # 0 = website source (not a DB document)
+                filename=url            # Store the page URL as the "filename" for citation
+            )
+            total_chunks += count
+
+        return EmbedStatusResponse(
+            status="success",
+            embedded_chunks_count=total_chunks
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Website embedding failed: {str(e)}"
         )

@@ -24,6 +24,7 @@ export const Chatbot: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -64,10 +65,10 @@ export const Chatbot: React.FC = () => {
         });
 
         if (formattedLogs.length === 0) {
-          // Push initial welcome greeting
+          // Push initial welcome greeting based on current mode
           formattedLogs.push({
             sender: "ai",
-            text: "Hello! I am your College Assistant. Feel free to ask me questions regarding admissions, fees, hostel rules, or course syllabus.",
+            text: mode === "general" ? "Ask me about colleges" : "Ask me about AIET",
           });
         }
 
@@ -82,6 +83,19 @@ export const Chatbot: React.FC = () => {
 
     fetchHistory();
   }, [sessionId]);
+
+  // Swap the greeting when the user switches modes (only if chat shows just the welcome)
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].sender === "ai") {
+        return [{
+          sender: "ai",
+          text: mode === "general" ? "Ask me about colleges" : "Ask me about AIET",
+        }];
+      }
+      return prev;
+    });
+  }, [mode]);
 
   const handleSendMessage = async (text: string) => {
     // 1. Add user query message locally
@@ -135,31 +149,34 @@ export const Chatbot: React.FC = () => {
     }
   };
 
-  const handleClearHistory = () => {
-    if (window.confirm("Are you sure you want to clear this conversation history?")) {
-      setMessages([
-        {
-          sender: "ai",
-          text: "Chat cleared. Ask me another question!",
-        },
-      ]);
-      // Remove session key to initiate a new thread
-      const newSid = `session_${Math.random().toString(36).substring(2, 15)}`;
-      localStorage.setItem("chat_session_id", newSid);
+  const handleClearHistory = async () => {
+    try {
+      await axiosInstance.delete(`/chat/history/${sessionId}`);
+    } catch (err) {
+      console.error("Failed to delete chat history on server:", err);
     }
+    setMessages([
+      {
+        sender: "ai",
+        text: "Chat cleared. Ask me another question!",
+      },
+    ]);
+    const newSid = `session_${Math.random().toString(36).substring(2, 15)}`;
+    localStorage.setItem("chat_session_id", newSid);
+    setConfirmClear(false);
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full max-w-4xl mx-auto bg-slate-900/20 border border-slate-800 rounded-3xl overflow-hidden shadow-xl shadow-black/5">
+    <div className="flex-1 flex flex-col h-full max-w-6xl mx-auto bg-slate-900/20 border border-slate-800 rounded-3xl overflow-hidden shadow-xl shadow-black/5">
       
       {/* Top Banner Control Panel */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b border-slate-800 bg-slate-900/60 shrink-0">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 border-b border-slate-800 bg-slate-900/60 shrink-0">
         
         {/* Toggle Mode Buttons */}
         <div className="flex p-1 bg-slate-950 border border-slate-800/80 rounded-xl w-fit">
           <button
             onClick={() => setMode("general")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 focus:outline-none ${
+            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all duration-150 focus:outline-none ${
               mode === "general"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-300"
@@ -169,32 +186,51 @@ export const Chatbot: React.FC = () => {
           </button>
           <button
             onClick={() => setMode("rag")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 focus:outline-none ${
+            className={`px-5 py-2 rounded-lg text-sm font-bold transition-all duration-150 focus:outline-none ${
               mode === "rag"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-300"
             }`}
           >
-            RAG Document Ask
+            AIET Chatbox
           </button>
         </div>
 
         {/* Clear Conversation Option */}
-        <button
-          onClick={handleClearHistory}
-          disabled={loading || historyLoading}
-          className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1.5 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 px-3 py-1.5 rounded-xl transition-all focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.0} stroke="currentColor" className="w-3.5 h-3.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-          </svg>
-          Clear History
-        </button>
+        {confirmClear ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-rose-400 font-semibold">Delete chat history?</span>
+            <button
+              onClick={handleClearHistory}
+              disabled={loading || historyLoading}
+              className="text-sm font-bold bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl transition-all focus:outline-none disabled:opacity-30"
+            >
+              Yes, Clear
+            </button>
+            <button
+              onClick={() => setConfirmClear(false)}
+              className="text-sm font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl transition-all focus:outline-none"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmClear(true)}
+            disabled={loading || historyLoading}
+            className="text-sm font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-2 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 px-4 py-2 rounded-xl transition-all focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.0} stroke="currentColor" className="w-3.5 h-3.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+            Clear History
+          </button>
+        )}
 
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 bg-slate-950/20">
+      <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-slate-950/20">
         {historyLoading ? (
           <div className="h-full flex items-center justify-center">
             <LoadingSpinner size="md" />
@@ -229,7 +265,7 @@ export const Chatbot: React.FC = () => {
       </div>
 
       {/* Input Submit Box Panel */}
-      <div className="p-4 border-t border-slate-800 bg-slate-900/40 shrink-0">
+      <div className="p-5 border-t border-slate-800 bg-slate-900/40 shrink-0">
         <ChatInput onSendMessage={handleSendMessage} isLoading={loading} />
       </div>
 

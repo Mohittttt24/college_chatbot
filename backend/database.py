@@ -11,11 +11,18 @@ from config import settings
 
 db_url = settings.DATABASE_URL
 
-# Neon and some other hosting services provide connection strings starting with 'postgres://'.
-# SQLAlchemy V2 requires 'postgresql://' (with 'ql') or it throws a NoSuchModuleError.
-# We fix this automatically by replacing it.
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+# Supabase pooler strings sometimes contain '&supa=base-pooler.x'.
+# psycopg2/libpq does not recognize 'supa' as a valid connection parameter and throws an error.
+# We strip it out to prevent psycopg2 from failing.
+if "supa=" in db_url:
+    from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+    parsed = urlparse(db_url)
+    query = dict(parse_qsl(parsed.query))
+    query.pop("supa", None)
+    db_url = urlunparse(parsed._replace(query=urlencode(query)))
 
 # Standard connection configurations.
 connect_args = {}

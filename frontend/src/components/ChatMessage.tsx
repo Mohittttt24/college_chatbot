@@ -3,7 +3,7 @@
 // It formats user messages and AI replies differently, displaying custom SVG avatars, 
 // and rendering cited document sources (RAG results) under the AI answer for transparency.
 
-import React, { useState } from "react";
+import React from "react";
 
 export interface Source {
   filename: string;
@@ -20,7 +20,6 @@ export interface ChatMessageProps {
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, sources }) => {
   const isUser = sender === "user";
-  const [showSources, setShowSources] = useState(false);
 
   return (
     <div className={`flex w-full gap-4 p-4 ${isUser ? "justify-end" : "justify-start bg-slate-900/40 border-y border-slate-800/50"}`}>
@@ -59,36 +58,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ sender, text, sources 
             <p className="whitespace-pre-wrap">{text}</p>
           </div>
 
-          {/* RAG Context Sources citation */}
+          {/* Source attribution — shows filename only, clean and minimal */}
           {!isUser && sources && sources.length > 0 && (
-            <div className="mt-2 text-xs">
-              <button 
-                onClick={() => setShowSources(!showSources)}
-                className="flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 font-medium transition-colors duration-150 focus:outline-none"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-3.5 h-3.5 transition-transform duration-200 ${showSources ? "rotate-90" : ""}`}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                </svg>
-                {showSources ? "Hide Cited Sources" : `View Cited Sources (${sources.length})`}
-              </button>
-
-              {showSources && (
-                <div className="mt-2 flex flex-col gap-2 p-3 bg-slate-900 border border-slate-800 rounded-lg max-w-lg">
-                  {sources.map((src, i) => (
-                    <div key={i} className="border-b border-slate-800/80 last:border-0 pb-2 last:pb-0">
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold mb-1">
-                        <span>📄 {src.filename}</span>
-                        <span className="text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded">
-                          Match: {(src.score * 100).toFixed(0)}%
-                        </span>
-                      </div>
-                      <p className="text-slate-300 leading-normal text-xs bg-slate-950 p-2 rounded border border-slate-900/50 select-text">
-                        "{src.text}"
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="mt-1 px-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+              <span>Source: <span className="text-indigo-400 font-medium">{sources[0].filename}</span></span>
             </div>
           )}
 

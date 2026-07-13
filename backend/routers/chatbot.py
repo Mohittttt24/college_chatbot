@@ -78,3 +78,19 @@ def get_session_history(session_id: str, db: Session = Depends(get_db)):
     """
     logs = db.query(ChatHistory).filter(ChatHistory.session_id == session_id).order_by(ChatHistory.created_at.asc()).all()
     return logs
+
+@router.delete("/history/{session_id}", status_code=status.HTTP_200_OK)
+def delete_session_history(session_id: str, db: Session = Depends(get_db)):
+    """
+    Deletes all historical chat logs for a specific session ID.
+    """
+    logs = db.query(ChatHistory).filter(ChatHistory.session_id == session_id).all()
+    if not logs:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No chat history found for this session."
+        )
+    for log in logs:
+        db.delete(log)
+    db.commit()
+    return {"message": "Chat history successfully deleted."}

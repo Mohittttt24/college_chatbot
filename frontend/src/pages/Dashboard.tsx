@@ -21,7 +21,7 @@ export const Dashboard: React.FC = () => {
             Academic Assistant Portal
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 mt-2">
-            Welcome Back, {user?.email ? user.email.split("@")[0] : "Student"}!
+            Welcome Back, {user?.full_name || (user?.email ? user.email.split("@")[0] : "Student")}!
           </h1>
           <p className="text-sm text-slate-400 max-w-lg leading-relaxed mt-1">
             Access institutional information, query college rules using grounding RAG, and update predefined FAQ items.

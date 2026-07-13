@@ -57,19 +57,21 @@ class RagService:
             top_k=top_k
         )
         
-        # Step 3: Combine matching snippets to build the prompt context
+        # Step 3: Filter results to only high-relevance chunks (score > 0.5)
+        MIN_SCORE = 0.50
         context_snippets = []
         sources = []
-        
+
         for result in search_results:
-            context_snippets.append(result["text"])
-            sources.append({
-                "text": result["text"],
-                "score": result["score"],
-                "filename": result["filename"],
-                "document_id": result["document_id"]
-            })
-            
+            if result["score"] >= MIN_SCORE:
+                context_snippets.append(result["text"])
+                sources.append({
+                    "text": result["text"],
+                    "score": result["score"],
+                    "filename": result["filename"],
+                    "document_id": result["document_id"]
+                })
+
         context = "\n\n---\n\n".join(context_snippets) if context_snippets else "No relevant document context found."
 
         # Step 4: Generate grounded AI response using the retrieved context
@@ -79,7 +81,8 @@ class RagService:
             session_id=session_id
         )
 
+        # Return only the single best source for clean UI display
         return {
             "answer": answer,
-            "sources": sources
+            "sources": sources[:1]
         }
