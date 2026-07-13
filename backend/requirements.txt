@@ -22,3 +22,4 @@ beautifulsoup4==4.15.0
 requests==2.34.2
 boto3==1.43.46
 loguru==0.7.3
+pydantic[email]
