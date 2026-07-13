@@ -8,6 +8,21 @@ os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
+# Monkey-patch ONNX Runtime to disable the CPU memory arena and memory patterns.
+# This significantly reduces the memory footprint of FastEmbed/ONNX Runtime on Render (512MB limit).
+try:
+    import onnxruntime as ort
+    original_init = ort.InferenceSession.__init__
+    def patched_init(self, model_path, sess_options=None, *args, **kwargs):
+        if sess_options is None:
+            sess_options = ort.SessionOptions()
+        sess_options.enable_cpu_mem_arena = False
+        sess_options.enable_mem_pattern = False
+        original_init(self, model_path, sess_options, *args, **kwargs)
+    ort.InferenceSession.__init__ = patched_init
+except ImportError:
+    pass
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
