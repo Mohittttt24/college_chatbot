@@ -21,6 +21,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
+# Create cache directory and pre-download FastEmbed model during docker build to prevent runtime OOM
+ENV FASTEMBED_CACHE_PATH=/app/fastembed_cache
+RUN mkdir -p /app/fastembed_cache && \
+    python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='BAAI/bge-small-en-v1.5')"
+
 # Copy backend source files
 COPY . .
 

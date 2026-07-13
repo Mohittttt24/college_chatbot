@@ -7,6 +7,7 @@ os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["FASTEMBED_CACHE_PATH"] = "/app/fastembed_cache"
 
 # Monkey-patch ONNX Runtime to disable the CPU memory arena and memory patterns.
 # This significantly reduces the memory footprint of FastEmbed/ONNX Runtime on Render (512MB limit).
